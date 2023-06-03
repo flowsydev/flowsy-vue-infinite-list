@@ -1,0 +1,36 @@
+{
+  "name": "@flowsydev/vue-infinite-list",
+  "version": "0.1.0-dev",
+  "type": "module",
+  "module": "./dist/flowsydev-vue-infinite-list.es.js",
+  "main": "./dist/flowsydev-vue-infinite-list.umd.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "import": "./dist/flowsydev-vue-infinite-list.es.js",
+      "require": "./dist/flowsydev-vue-infinite-list.umd.js"
+    },
+    "./dist/style.css": "./dist/style.css"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc && vite build",
+    "pub": "npm run build && npm publish --access public",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@vueuse/core": "^10.1.2",
+    "vue": "^3.2.47"
+  },
+  "devDependencies": {
+    "@types/node": "^20.2.1",
+    "@vitejs/plugin-vue": "^4.1.0",
+    "typescript": "^4.9.3",
+    "vite": "^4.2.0",
+    "vite-plugin-dts": "^2.3.0",
+    "vue-tsc": "^1.2.0"
+  }
+}
