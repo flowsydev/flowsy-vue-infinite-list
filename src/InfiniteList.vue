@@ -1,3 +1,29 @@
+<template>
+  <div :key="`infinite_list_container${executed ? '' : '_empty'}`" v-bind="containerProps" :style="{ height: heightComputed }">
+    <div :key="`infinite_list_wrapper${executed ? '' : '_empty'}`" v-bind="wrapperProps">
+      <div v-for="{ index, data } in list" :key="`infinite_list_item_${index}`" :style="itemStyle">
+        <slot name="item" v-bind="{ item: data, index }"></slot>
+      </div>
+      <slot v-if="isEmpty" name="empty" v-bind="{ load: forceLoadMore }">
+        <div style="margin-top:3rem; margin-bottom: 3rem; text-align: center">
+          <p>Empty list</p>
+          <p>
+            <button type="button" role="button" @click="forceLoadMore">Load Data</button>
+          </p>
+        </div>
+      </slot>
+      <div v-if="isLoading" class="progress-area">
+        <slot name="progress">
+          <div class="progress-container">
+            <div class="progress-ellipsis"><div></div><div></div><div></div><div></div></div>
+          </div>
+        </slot>
+      </div>
+      <div ref="threshold" style="height: 50px;"></div>
+    </div>
+  </div>
+</template>
+
 <script setup lang="ts">
 import { useInfiniteScroll, useVirtualList } from "@vueuse/core";
 import {
@@ -81,6 +107,7 @@ const items = ref<Array<any>>([]);
 const pageNumber = ref(0);
 const isLoading = ref(false);
 const executed = ref(false);
+const isEmpty = ref(false);
 
 const itemStyle = computed<StyleValue>(() => ({
   height: `${itemHeightComputed.value}px`,
@@ -110,8 +137,13 @@ const emit = defineEmits<{
   (event: "error", error: LoadErrorEvent): void
 }>();
 
-async function loadMore() {
-  if (isLoading.value) return;
+function forceLoadMore(): Promise<void> {
+  isEmpty.value = false;
+  return loadMore();
+}
+
+async function loadMore(): Promise<void> {
+  if (isLoading.value || (executed.value && isEmpty.value)) return;
 
   if (thresholdReached.value) {
     thresholdReached.value = false;
@@ -146,6 +178,7 @@ async function loadMore() {
     }
 
     executed.value = true;
+    isEmpty.value = items.value.length === 0;
 
     if (container && scrollOffset != 0) {
       await nextTick();
@@ -172,26 +205,6 @@ defineComponent({
   name: "InfiniteList"
 });
 </script>
-
-<template>
-  <div>
-    <div :key="`infinite_list_container${executed ? '' : '_empty'}`" v-bind="containerProps" :style="{ height: heightComputed }">
-      <div :key="`infinite_list_wrapper${executed ? '' : '_empty'}`" v-bind="wrapperProps">
-        <div v-for="{ index, data } in list" :key="`infinite_list_item_${index}`" :style="itemStyle">
-          <slot name="item" v-bind="{ item: data, index }"></slot>
-        </div>
-        <div v-if="isLoading" class="progress-area">
-          <slot name="progress">
-            <div class="progress-container">
-              <div class="progress-ellipsis"><div></div><div></div><div></div><div></div></div>
-            </div>
-          </slot>
-        </div>
-        <div ref="threshold" style="height: 50px;"></div>
-      </div>
-    </div>
-  </div>
-</template>
 
 <style scoped lang="css">
 .progress-container {
