@@ -196,6 +196,7 @@ async function loadMore(): Promise<void> {
     emit("error", event);
     if (typeof defaults?.onError === "function")
       defaults.onError(event);
+    thresholdReached.value = true;
   } finally {
     isLoading.value = false;
   }
