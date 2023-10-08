@@ -9,16 +9,16 @@ const libName = "flowsydev-vue-infinite-list";
 export default defineConfig({
   build: {
     lib: {
-      entry: path.resolve(__dirname, 'src/index.ts'),
+      entry: path.resolve(__dirname, "src/index.ts"),
       name: libName,
       formats: ["es", "umd"],
       fileName: (format) => `${libName}.${format}.js`
     },
     rollupOptions: {
-      external: ['vue'],
+      external: ["vue"],
       output: {
         globals: {
-          vue: 'Vue'
+          vue: "Vue"
         },
         exports: "named"
       }

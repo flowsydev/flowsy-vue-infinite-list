@@ -1,25 +1,19 @@
 # Infinite List for Vue
 
-The **InfiniteList** component is a wrapper for **useVirtualList** and **useInfiniteScroll** from [@vueuse/core](https://www.npmjs.com/package/@vueuse/core)
-that combines the features from both composables and adds a simple way to render items every time the user scrolls down the page.
+The **FlowsyInfiniteList** component is a wrapper for the IntersectionObserver API and **useVirtualList** from [@vueuse/core](https://www.npmjs.com/package/@vueuse/core)
+that combines their features and adds a simple way to render items every time the user scrolls down the page.
 
 
-## Configure Global Options
+## Auto-import (optional)
 
 ```typescript
 import { createApp } from "vue";
-import InfiniteList from "@flowsydev/vue-infinite-list";
+import { createInfiniteList } from "@flowsydev/vue-infinite-list";
 import App from "./App.vue";
 
-app.use(InfiniteList, {
-  pageSize: 20, // How many items to load in every scroll event
-  loadInterval: 2000, // Milliseconds to wait after loading to avoid multiple invocations
-  scrollItemHeight: true, // Whether or not to scroll down after loading, as much as the item height, so the new items are visible in the viewport
-  onError: (error: any) => {
-    // Global hook for error handling
-    console.error(error);
-  }
-});
+const infiniteList = createInfiniteList();
+
+app.use(infiniteList);
 
 app.mount("#app");
 ```
@@ -30,10 +24,13 @@ app.mount("#app");
 ```vue
 <script setup lang="ts">
 import { ref } from "vue";
+import FlowsyInfiniteList, { FlowsyLoadErrorContext } from "@flowsydev/vue-infinite-list";
 import type { Customer } from "@/composables/customer-service";
 import { useCustomerService } from "@/composables/customer-service";
 
 const searchTerm = ref("");
+
+// Fictitious service used to manage customer data
 const { loadCustomers } = useCustomerService();
 
 async function load(pageNumber: number, pageSize: number): Promise<Array<Customer>> {
@@ -50,6 +47,11 @@ async function load(pageNumber: number, pageSize: number): Promise<Array<Custome
   // }
   return await loadCustomers({ searchTerm: searchTerm.value, pageNumber, pageSize });
 }
+
+function onError(context: FlowsyLoadErrorContext) {
+  const { error, pageNumber, pageSize } = context;
+  console.error("Failed to load items", { error, pageNumber, pageSize });
+}
 </script>
 
 <template>
@@ -59,14 +61,25 @@ async function load(pageNumber: number, pageSize: number): Promise<Array<Custome
       <input v-model="searchTerm" type="text">
     </div>
     
-    <!-- The list of search results to be populated as the user scrolls down the page -->
-    <infinite-list :load="load" item-height="120px" item-margin-bottom="20">
-      <template #item="{ item, index }">
+    <!--
+    The list of search results to be populated as the user scrolls down the page
+    
+    load: A function used to load items for the list ( (pageNumber: number, pageSize: number) => any[] )
+    item-height: Value or function to resolve the item height (used to calculate how many items are rendered in the DOM)
+    page-size: How many items to load every time the load function is invoked
+    @error: Event emitted if an error occurs when loading items
+    -->
+    <flowsy-infinite-list :load="load" item-height="120" page-size="50" @error="onError">
+      <template #item="{ item, index, first, last, isLoading, style }">
         <!--
         item: The current item (Customer)
         index: The zero-based index of the current item 
+        first: This item is the first one of the list (boolean)
+        last: This item is the last one of the list (boolean)
+        isLoading: The list is loading items
+        style: An object with CSS styles for the current item
         -->
-        <div class="row">
+        <div class="row" :style="style">
           <div class="col">
             <h1>
               {{ index + 1 }}
@@ -80,12 +93,9 @@ async function load(pageNumber: number, pageSize: number): Promise<Array<Custome
             </p>
           </div>
         </div>
+        <hr v-if="!last">
       </template>
-      <template #progress>
-        <!-- Custom progress indicator -->
-        Loading...
-      </template>
-    </infinite-list>
+    </flowsy-infinite-list>
   </div>
 </template>
 ```
