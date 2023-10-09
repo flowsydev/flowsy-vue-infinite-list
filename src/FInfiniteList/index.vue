@@ -26,9 +26,9 @@
 import { useVirtualList, UseVirtualListOptions } from "@vueuse/core";
 import { computed, nextTick, onMounted, onUnmounted, PropType, ref, toRefs, watch } from "vue";
 import {
-  FlowsyLoadErrorContext,
+  LoadErrorContext,
   LoadFunction,
-  FlowsyVirtualListItem
+  VirtualListItem
 } from "./view-model";
 
 const props = defineProps({
@@ -72,7 +72,7 @@ const props = defineProps({
 const { load, pageSize, height, horizontal, itemHeight, itemWidth, itemDisplay, threshold: thresholdSize } = toRefs(props);
 const emit = defineEmits<{
   (event: "load", newItems: any[]): void;
-  (event: "error", context: FlowsyLoadErrorContext): void;
+  (event: "error", context: LoadErrorContext): void;
 }>();
 
 const pristine = ref(true);
@@ -80,7 +80,7 @@ const pageNumber = ref(0);
 const items = ref<any[]>([]);
 const isLoading = ref(false);
 const isEmpty = ref(true);
-const lastError = ref<FlowsyLoadErrorContext>();
+const lastError = ref<LoadErrorContext>();
 function resolveItemHeight(item: any, index: number): number | undefined {
   const ih = itemHeight?.value;
   if (ih === undefined) return;
@@ -96,7 +96,7 @@ function resolveItemDisplay(item: any, index: number): string | undefined {
   if (id === undefined) return;
   return typeof id === "function" ? id(item, index) : id;
 }
-function resolveVirtualItemStyle(virtualItem: FlowsyVirtualListItem): any {
+function resolveVirtualItemStyle(virtualItem: VirtualListItem): any {
   const style: any = {};
 
   if (virtualItem.height !== undefined)
@@ -110,8 +110,8 @@ function resolveVirtualItemStyle(virtualItem: FlowsyVirtualListItem): any {
 
   return style;
 }
-const virtualItems = computed<FlowsyVirtualListItem[]>(() => items.value.map((item, index) => {
-  const virtualItem: FlowsyVirtualListItem = { target: item };
+const virtualItems = computed<VirtualListItem[]>(() => items.value.map((item, index) => {
+  const virtualItem: VirtualListItem = { target: item };
   const height = resolveItemHeight(item, index);
   const width = resolveItemWidth(item, index);
   const display = resolveItemDisplay(item, index);
@@ -127,7 +127,7 @@ const virtualListOptions: UseVirtualListOptions = horizontal.value
   : {
     itemHeight: (index) => resolveItemHeight(items.value[index], index) || 0
   }
-const { list, containerProps, wrapperProps } = useVirtualList<FlowsyVirtualListItem>(virtualItems, virtualListOptions);
+const { list, containerProps, wrapperProps } = useVirtualList<VirtualListItem>(virtualItems, virtualListOptions);
 const scrollObserver = ref<IntersectionObserver>();
 const threshold = ref<Element>();
 const thresholdStyle = computed(() => ({
@@ -177,7 +177,7 @@ async function loadMore(): Promise<void> {
 
     emit("load", newItems);
   } catch (error) {
-    const context: FlowsyLoadErrorContext = {
+    const context: LoadErrorContext = {
       error,
       pageNumber: pageNumber.value,
       pageSize: pageSize.value

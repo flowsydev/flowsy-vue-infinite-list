@@ -1,6 +1,6 @@
 {
   "name": "@flowsydev/vue-infinite-list",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "type": "module",
   "module": "./dist/flowsydev-vue-infinite-list.es.js",
   "main": "./dist/flowsydev-vue-infinite-list.umd.js",

@@ -1,6 +1,6 @@
 # Infinite List for Vue
 
-The **FlowsyInfiniteList** component is a wrapper for the IntersectionObserver API and **useVirtualList** from [@vueuse/core](https://www.npmjs.com/package/@vueuse/core)
+The **FInfiniteList** component is a wrapper for the IntersectionObserver API and the **useVirtualList** composable from [@vueuse/core](https://www.npmjs.com/package/@vueuse/core)
 that combines their features and adds a simple way to render items every time the user scrolls down the page.
 
 
@@ -24,14 +24,26 @@ app.mount("#app");
 ```vue
 <script setup lang="ts">
 import { ref } from "vue";
-import FlowsyInfiniteList, { FlowsyLoadErrorContext } from "@flowsydev/vue-infinite-list";
+import FInfiniteList, { FInfiniteListRef, LoadErrorContext } from "@flowsydev/vue-infinite-list";
+
+// Fictitious model and service used to manage customer data
 import type { Customer } from "@/composables/customer-service";
 import { useCustomerService } from "@/composables/customer-service";
-
+const { loadCustomers } = useCustomerService();
 const searchTerm = ref("");
 
-// Fictitious service used to manage customer data
-const { loadCustomers } = useCustomerService();
+// Exposed props and methods of the <f-infinite-list> component
+const infiniteList = ref<FInfiniteListRef>();
+/*
+infiniteList will have the following members:
+- pageNumber: ComputedRef<number> (the page number used to load the last set of items) 
+- realItems: ComputedRef<any[]> (the full list of items)
+- virtualItems: ComputedRef<any[]> (the list of items being rendered)
+- isLoading: ComputedRef<boolean> (true if the list is currently fetching items)
+- isEmpty: ComputedRef<boolean> (true if the list has no items)
+- loadMore: () => Promise<void> (loads the next set of items without requiring the user to scroll down the page)
+- reset: () => void (clears the list and resets the value of pageNumber to restart loading items) 
+*/
 
 async function load(pageNumber: number, pageSize: number): Promise<Array<Customer>> {
   // pageNumber => the current page number to load
@@ -48,7 +60,7 @@ async function load(pageNumber: number, pageSize: number): Promise<Array<Custome
   return await loadCustomers({ searchTerm: searchTerm.value, pageNumber, pageSize });
 }
 
-function onError(context: FlowsyLoadErrorContext) {
+function onError(context: LoadErrorContext) {
   const { error, pageNumber, pageSize } = context;
   console.error("Failed to load items", { error, pageNumber, pageSize });
 }
@@ -69,7 +81,8 @@ function onError(context: FlowsyLoadErrorContext) {
     page-size: How many items to load every time the load function is invoked
     @error: Event emitted if an error occurs when loading items
     -->
-    <flowsy-infinite-list :load="load" item-height="120" page-size="50" @error="onError">
+    <f-infinite-list :load="load" item-height="120" page-size="50" @error="onError">
+      <!-- The template used to render every item of the list -->
       <template #item="{ item, index, first, last, isLoading, style }">
         <!--
         item: The current item (Customer)
@@ -95,7 +108,7 @@ function onError(context: FlowsyLoadErrorContext) {
         </div>
         <hr v-if="!last">
       </template>
-    </flowsy-infinite-list>
+    </f-infinite-list>
   </div>
 </template>
 ```
