@@ -247,6 +247,6 @@ defineExpose({
 
 <script lang="ts">
 export default {
-  name: "FlowsyInfiniteList"
+  name: "FInfiniteList"
 };
 </script>
